@@ -44,7 +44,7 @@ class HelloLambdaStack(Stack):
     def _generate_layer_lib(self) -> bool:
         current_work_dir=os.getcwd()
         user_lambda_req_file="{}/{}/{}".format(current_work_dir,USER_LAMBDA_LIB_NAME,USER_LAMBDA_REQ_FILE_NAME)
-        print(user_lambda_req_file)
+        print(f"Requirements for user's lambda function: {user_lambda_req_file}")
         if not os.path.isfile(user_lambda_req_file):
             return True # no need to execute pip install
         else:
@@ -52,6 +52,10 @@ class HelloLambdaStack(Stack):
             try:
                 # Create virtual environment using subprocess
                 venv_name = "{}/{}/venv".format(current_work_dir,USER_LAMBDA_LIB_NAME)
+                print(f"Removing virtual environment if it exists: {venv_name}")
+                if os.path.exists(venv_name):
+                    shutil.rmtree(venv_name)
+
                 print(f"Creating virtual environment: {venv_name}")
                 subprocess.run([sys.executable, "-m", "venv", venv_name], check=True)
 
@@ -59,7 +63,7 @@ class HelloLambdaStack(Stack):
 
                 # If requirements are provided, install them
                 print("Installing requirements...")
-                subprocess.run([pip_path + " install -r {}".format(user_lambda_req_file)], check=True)
+                subprocess.run([pip_path , "install", "-r", "{}".format(user_lambda_req_file)], check=True)
 
                 # Create zip archive of the virtual environment
                 print("Creating zip archive...")
