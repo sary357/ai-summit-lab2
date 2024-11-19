@@ -9,7 +9,7 @@ import os,sys
 import subprocess
 import shutil
 from enum import Enum
-
+from util import generate_unique_id
 LAMBDA_FUNCTION_NAME="MyFunction"
 S3_BASE_LOCATION="s3://fuming-ai-summit-lab-2025/"
 S3_LOCATION="{}/{}".format(S3_BASE_LOCATION, LAMBDA_FUNCTION_NAME)
@@ -66,7 +66,8 @@ class HelloLambdaStack(Stack):
             handler=fn,
             rest_api_name="HelloApi"
         )
- #   def _upload_zip_file_to_s3(self) -> bool:
+    def _upload_zip_file_to_s3(self) -> bool:
+        
     
  
     def _generate_layer_lib(self) -> VenvExecStatus:
