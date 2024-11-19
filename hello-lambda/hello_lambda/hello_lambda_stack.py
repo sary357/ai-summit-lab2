@@ -15,6 +15,7 @@ S3_BASE_LOCATION="s3://fuming-ai-summit-lab-2025/"
 S3_LOCATION="{}/{}".format(S3_BASE_LOCATION, LAMBDA_FUNCTION_NAME)
 USER_LAMBDA_LIB_NAME="lambda_layer_lib"
 USER_LAMBDA_REQ_FILE_NAME="requirements.txt"
+VENV_FOLDER_NAME="venv"
 
 class VenvExecStatus(Enum):
     NO_REQUIREMENTS_FILE = 1
@@ -28,7 +29,7 @@ class HelloLambdaStack(Stack):
 
         # prepare necessary libraries with subprocess
         venv_status=self._generate_layer_lib()
-        print(f"virtual environment created status: {zip_file_status}")
+        print(f"virtual environment created status: {venv_status}")
  
         # lambda
         if venv_status == VenvExecStatus.NO_REQUIREMENTS_FILE:
@@ -53,7 +54,7 @@ class HelloLambdaStack(Stack):
                 timeout=cdk.Duration.minutes(1), # 3 minutes
                 memory_size=10240, # max: 10240 MB
                 code=_lambda.Code.from_asset("lib/lambda-handler")
-            }
+                )
         elif venv_status == VenvExecStatus.REQUIREMENTS_EXIST_BUT_FAILED:
             print("Failed to create virtual environment. Exit!!")
             return 
@@ -65,7 +66,9 @@ class HelloLambdaStack(Stack):
             handler=fn,
             rest_api_name="HelloApi"
         )
-
+ #   def _upload_zip_file_to_s3(self) -> bool:
+    
+ 
     def _generate_layer_lib(self) -> VenvExecStatus:
         current_work_dir=os.getcwd()
         user_lambda_req_file="{}/{}/{}".format(current_work_dir,USER_LAMBDA_LIB_NAME,USER_LAMBDA_REQ_FILE_NAME)
@@ -76,10 +79,13 @@ class HelloLambdaStack(Stack):
             # need to run execute pip install and check pip staus
             try:
                 # Create virtual environment using subprocess
-                venv_name = "{}/{}/venv".format(current_work_dir,USER_LAMBDA_LIB_NAME)
+                venv_name = "{}/{}/{}".format(current_work_dir,USER_LAMBDA_LIB_NAME,VENV_FOLDER_NAME)
                 print(f"Removing virtual environment if it exists: {venv_name}")
                 if os.path.exists(venv_name):
                     shutil.rmtree(venv_name)
+                print(f"Removing zipped virtual environment if it exists: {venv_name}.zip")
+                if os.path.exists(f"{venv_name}.zip"):
+                    os.remove(f"{venv_name}.zip")
 
                 print(f"Creating virtual environment: {venv_name}")
                 subprocess.run([sys.executable, "-m", "venv", venv_name], check=True)
