@@ -9,10 +9,15 @@ import os,sys
 import subprocess
 import shutil
 from enum import Enum
-from util import generate_unique_id
+from .util import generate_unique_id
+import boto3
+from botocore.exceptions import ClientError
+import os
+
+
 LAMBDA_FUNCTION_NAME="MyFunction"
-S3_BASE_LOCATION="s3://fuming-ai-summit-lab-2025/"
-S3_LOCATION="{}/{}".format(S3_BASE_LOCATION, LAMBDA_FUNCTION_NAME)
+S3_BUCKET="fuming-ai-summit-lab-2025"
+#S3_LOCATION="{}/{}".format(S3_BASE_LOCATION, LAMBDA_FUNCTION_NAME)
 USER_LAMBDA_LIB_NAME="lambda_layer_lib"
 USER_LAMBDA_REQ_FILE_NAME="requirements.txt"
 VENV_FOLDER_NAME="venv"
@@ -44,7 +49,13 @@ class HelloLambdaStack(Stack):
                 code=_lambda.Code.from_asset("lib/lambda-handler")
             )
         elif venv_status == VenvExecStatus.REQUIREMENTS_EXIST_AND_CREATE_SUCCESS:
+            s3_file=self._upload_zip_file_to_s3()
             # layer
+            custom_lib_layer = _lambda.LayerVersion(self, "CustomLib",
+                                                    layer_version_name="custom-lib",
+                                                    compatible_runtimes = [_lambda.Runtime.PYTHON_3_9],
+                                                    code = _lambda.Code.from_bucket(S3_BUCKET, s3_file)
+                                                    )
             fn = _lambda.Function(
                 self,
                 LAMBDA_FUNCTION_NAME,
@@ -53,7 +64,8 @@ class HelloLambdaStack(Stack):
                 handler="index.lambda_handler",
                 timeout=cdk.Duration.minutes(1), # 3 minutes
                 memory_size=10240, # max: 10240 MB
-                code=_lambda.Code.from_asset("lib/lambda-handler")
+                code=_lambda.Code.from_asset("lib/lambda-handler"),
+                layers = [custom_lib_layer]
                 )
         elif venv_status == VenvExecStatus.REQUIREMENTS_EXIST_BUT_FAILED:
             print("Failed to create virtual environment. Exit!!")
@@ -66,8 +78,18 @@ class HelloLambdaStack(Stack):
             handler=fn,
             rest_api_name="HelloApi"
         )
-    def _upload_zip_file_to_s3(self) -> bool:
-        
+    def _upload_zip_file_to_s3(self) -> str:
+        current_work_dir=os.getcwd()
+        uniq_id=generate_unique_id()
+        local_zipped_venv_file="{}/{}/{}.zip".format(current_work_dir,USER_LAMBDA_LIB_NAME,VENV_FOLDER_NAME)
+        s3_zipped_venv_file="{}-{}.zip".format(VENV_FOLDER_NAME, uniq_id)
+        s3_client = boto3.client('s3')
+        try:
+            response = s3_client.upload_file(local_zipped_venv_file, S3_BUCKET, s3_zipped_venv_file)
+        except ClientError as e:
+            logging.error(e)
+            return None
+        return f"{s3_zipped_venv_file}"
     
  
     def _generate_layer_lib(self) -> VenvExecStatus:
