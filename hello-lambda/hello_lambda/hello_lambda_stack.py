@@ -1,22 +1,25 @@
 from aws_cdk import (
     Stack,
     aws_apigateway as apigw,
-    aws_lambda as _lambda
+    aws_lambda as _lambda,
+    RemovalPolicy
 )
 from constructs import Construct
 import aws_cdk as cdk
+import aws_cdk.aws_s3 as s3
 import os,sys
 import subprocess
 import shutil
 from enum import Enum
-from .util import generate_unique_id
 import boto3
 from botocore.exceptions import ClientError
 import os
-
+import datetime
+import random
+import string
 
 LAMBDA_FUNCTION_NAME="MyFunction"
-S3_BUCKET="fuming-ai-summit-lab-2025"
+#S3_BUCKET="fuming-ai-summit-lab-2025"
 #S3_LOCATION="{}/{}".format(S3_BASE_LOCATION, LAMBDA_FUNCTION_NAME)
 USER_LAMBDA_LIB_NAME="lambda_layer_lib"
 USER_LAMBDA_REQ_FILE_NAME="requirements.txt"
@@ -44,17 +47,23 @@ class HelloLambdaStack(Stack):
                 #runtime=_lambda.Runtime.PYTHON_3_12,
                 runtime=_lambda.Runtime.PYTHON_3_9,
                 handler="index.lambda_handler",
-                timeout=cdk.Duration.minutes(1), # 3 minutes
+                timeout=cdk.Duration.minutes(3), # 3 minutes
                 memory_size=10240, # max: 10240 MB
                 code=_lambda.Code.from_asset("lib/lambda-handler")
             )
         elif venv_status == VenvExecStatus.REQUIREMENTS_EXIST_AND_CREATE_SUCCESS:
-            s3_file=self._upload_zip_file_to_s3()
+         #   s3_file=self._upload_zip_file_to_s3()
+         #   print(f"s3 file: {s3_file}")
+         #   s3_lib_bucket = s3.Bucket(self, S3_BUCKET)
+            local_venv_path=self._get_local_venv_path()
+            print(f"Local zipped venv file: {local_venv_path}")
             # layer
             custom_lib_layer = _lambda.LayerVersion(self, "CustomLib",
                                                     layer_version_name="custom-lib",
                                                     compatible_runtimes = [_lambda.Runtime.PYTHON_3_9],
-                                                    code = _lambda.Code.from_bucket(S3_BUCKET, s3_file)
+                                                    #code = _lambda.Code.from_bucket(s3_lib_bucket, s3_file)
+                                                    code = _lambda.Code.from_asset(local_venv_path),
+                                                    removal_policy=RemovalPolicy.DESTROY
                                                     )
             fn = _lambda.Function(
                 self,
@@ -62,7 +71,7 @@ class HelloLambdaStack(Stack):
                 #runtime=_lambda.Runtime.PYTHON_3_12,
                 runtime=_lambda.Runtime.PYTHON_3_9,
                 handler="index.lambda_handler",
-                timeout=cdk.Duration.minutes(1), # 3 minutes
+                timeout=cdk.Duration.minutes(3), # 3 minutes
                 memory_size=10240, # max: 10240 MB
                 code=_lambda.Code.from_asset("lib/lambda-handler"),
                 layers = [custom_lib_layer]
@@ -78,18 +87,24 @@ class HelloLambdaStack(Stack):
             handler=fn,
             rest_api_name="HelloApi"
         )
-    def _upload_zip_file_to_s3(self) -> str:
+    def _get_local_venv_path(self):
         current_work_dir=os.getcwd()
-        uniq_id=generate_unique_id()
-        local_zipped_venv_file="{}/{}/{}.zip".format(current_work_dir,USER_LAMBDA_LIB_NAME,VENV_FOLDER_NAME)
-        s3_zipped_venv_file="{}-{}.zip".format(VENV_FOLDER_NAME, uniq_id)
-        s3_client = boto3.client('s3')
-        try:
-            response = s3_client.upload_file(local_zipped_venv_file, S3_BUCKET, s3_zipped_venv_file)
-        except ClientError as e:
-            logging.error(e)
-            return None
-        return f"{s3_zipped_venv_file}"
+        local_zipped_venv="{}/{}/{}".format(current_work_dir,USER_LAMBDA_LIB_NAME,VENV_FOLDER_NAME)
+        return local_zipped_venv
+    def _get_local_venv_zipped_file_path(self):
+        return self._get_local_venv_path+".zip"
+   # def _upload_zip_file_to_s3(self) -> str:
+   #     current_work_dir=os.getcwd()
+   #     uniq_id=generate_unique_id()
+   #     local_zipped_venv_file="{}/{}/{}.zip".format(current_work_dir,USER_LAMBDA_LIB_NAME,VENV_FOLDER_NAME)
+   #     s3_zipped_venv_file="{}-{}.zip".format(VENV_FOLDER_NAME, uniq_id)
+   #     s3_client = boto3.client('s3')
+   #     try:
+   #         response = s3_client.upload_file(local_zipped_venv_file, S3_BUCKET, s3_zipped_venv_file)
+   #     except ClientError as e:
+   #         logging.error(e)
+   #         return None
+   #     return f"{s3_zipped_venv_file}"
     
  
     def _generate_layer_lib(self) -> VenvExecStatus:
@@ -132,3 +147,21 @@ class HelloLambdaStack(Stack):
                 print(f"An unexpected error occurred: {e}")
                 return VenvExecStatus.REQUIREMENTS_EXIST_BUT_FAILED
 
+#def generate_unique_id(length=12):
+#    """
+#    Generates a unique ID with the format:
+#    YYYYMMDDHHmmss + 10 characters (random charset + number)
+#    """
+#    # Get the current date and time
+#    now = datetime.datetime.now()
+#
+#    # Format the date and time
+#    date_time_str = now.strftime('%Y%m%d%H%M%S')
+#
+#    # Generate a random 10-character string
+#    random_chars = ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+#
+#    # Combine the date/time and random characters
+#    unique_id = date_time_str + "-" +random_chars
+#
+#    return unique_id
