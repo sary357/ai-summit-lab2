@@ -56,13 +56,15 @@ class HelloLambdaStack(Stack):
          #   print(f"s3 file: {s3_file}")
          #   s3_lib_bucket = s3.Bucket(self, S3_BUCKET)
             local_venv_path=self._get_local_venv_path()
-            print(f"Local zipped venv file: {local_venv_path}")
+            print(f"Local venv: {local_venv_path}")
             # layer
             custom_lib_layer = _lambda.LayerVersion(self, "CustomLib",
-                                                    layer_version_name="custom-lib",
+                                                    #layer_version_name="custom-lib",
+                                                    description="custom python packages",
                                                     compatible_runtimes = [_lambda.Runtime.PYTHON_3_9],
                                                     #code = _lambda.Code.from_bucket(s3_lib_bucket, s3_file)
-                                                    code = _lambda.Code.from_asset(local_venv_path),
+                                                    #code = _lambda.Code.from_asset(local_venv_path),
+                                                    code = _lambda.Code.from_asset(self._get_local_venv_zipped_file_path()),
                                                     removal_policy=RemovalPolicy.DESTROY
                                                     )
             fn = _lambda.Function(
@@ -73,7 +75,7 @@ class HelloLambdaStack(Stack):
                 handler="index.lambda_handler",
                 timeout=cdk.Duration.minutes(3), # 3 minutes
                 memory_size=10240, # max: 10240 MB
-                code=_lambda.Code.from_asset("lib/lambda-handler"),
+                code=_lambda.Code.from_asset(os.getcwd()+"/lib/lambda-handler"),
                 layers = [custom_lib_layer]
                 )
         elif venv_status == VenvExecStatus.REQUIREMENTS_EXIST_BUT_FAILED:
@@ -92,7 +94,7 @@ class HelloLambdaStack(Stack):
         local_zipped_venv="{}/{}/{}".format(current_work_dir,USER_LAMBDA_LIB_NAME,VENV_FOLDER_NAME)
         return local_zipped_venv
     def _get_local_venv_zipped_file_path(self):
-        return self._get_local_venv_path+".zip"
+        return self._get_local_venv_path()+".zip"
    # def _upload_zip_file_to_s3(self) -> str:
    #     current_work_dir=os.getcwd()
    #     uniq_id=generate_unique_id()
@@ -136,6 +138,7 @@ class HelloLambdaStack(Stack):
 
                 # Create zip archive of the virtual environment
                 print("Creating zip archive...")
+                #shutil.make_archive(f"{venv_name}", 'zip', venv_name)
                 shutil.make_archive(f"{venv_name}", 'zip', venv_name)
 
                 print(f"Virtual environment created and zipped successfully: {venv_name}.zip")
