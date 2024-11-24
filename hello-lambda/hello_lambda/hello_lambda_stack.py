@@ -19,13 +19,9 @@ import random
 import string
 
 LAMBDA_FUNCTION_NAME="MyFunction"
-#S3_BUCKET="fuming-ai-summit-lab-2025"
-#S3_LOCATION="{}/{}".format(S3_BASE_LOCATION, LAMBDA_FUNCTION_NAME)
 USER_LAMBDA_LIB_NAME="lambda_layer_lib"
 USER_LAMBDA_REQ_FILE_NAME="requirements.txt"
-#VENV_FOLDER_NAME="venv"
 VENV_FOLDER_NAME="python"
-
 class VenvExecStatus(Enum):
     NO_REQUIREMENTS_FILE = 1
     REQUIREMENTS_EXIST_AND_CREATE_SUCCESS = 2
@@ -53,9 +49,6 @@ class HelloLambdaStack(Stack):
                 code=_lambda.Code.from_asset("lib/lambda-handler")
             )
         elif venv_status == VenvExecStatus.REQUIREMENTS_EXIST_AND_CREATE_SUCCESS:
-         #   s3_file=self._upload_zip_file_to_s3()
-         #   print(f"s3 file: {s3_file}")
-         #   s3_lib_bucket = s3.Bucket(self, S3_BUCKET)
             local_venv_path=self._get_local_venv_path()
             print(f"Local venv: {local_venv_path}")
             # layer
@@ -85,7 +78,7 @@ class HelloLambdaStack(Stack):
             return 
 
         # API gateway
-        enabled=False
+        enabled=True
         if enabled:
             endpoint = apigw.LambdaRestApi(
                 self,
@@ -97,8 +90,8 @@ class HelloLambdaStack(Stack):
         current_work_dir=os.getcwd()
         local_zipped_venv="{}/{}/{}".format(current_work_dir,USER_LAMBDA_LIB_NAME,VENV_FOLDER_NAME)
         return local_zipped_venv
-    def _get_local_venv_zipped_file_path(self):
-        return self._get_local_venv_path()+".zip"
+  #  def _get_local_venv_zipped_file_path(self):
+  #      return self._get_local_venv_path()+".zip"
    # def _upload_zip_file_to_s3(self) -> str:
    #     current_work_dir=os.getcwd()
    #     uniq_id=generate_unique_id()
