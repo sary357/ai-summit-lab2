@@ -22,6 +22,7 @@ LAMBDA_FUNCTION_NAME="MyFunction"
 USER_LAMBDA_LIB_NAME="lambda_layer_lib"
 USER_LAMBDA_REQ_FILE_NAME="requirements.txt"
 VENV_FOLDER_NAME="python"
+RUNTIME_VERSION=_lambda.Runtime.PYTHON_3_9
 class VenvExecStatus(Enum):
     NO_REQUIREMENTS_FILE = 1
     REQUIREMENTS_EXIST_AND_CREATE_SUCCESS = 2
@@ -42,7 +43,7 @@ class HelloLambdaStack(Stack):
                 self,
                 LAMBDA_FUNCTION_NAME,
                 #runtime=_lambda.Runtime.PYTHON_3_12,
-                runtime=_lambda.Runtime.PYTHON_3_9,
+                runtime=RUNTIME_VERSION,
                 handler="index.lambda_handler",
                 timeout=cdk.Duration.minutes(3), # 3 minutes
                 memory_size=10240, # max: 10240 MB
@@ -55,7 +56,7 @@ class HelloLambdaStack(Stack):
             custom_lib_layer = _lambda.LayerVersion(self, "CustomLib",
                                                     #layer_version_name="custom-lib",
                                                     description="custom python packages",
-                                                    compatible_runtimes = [_lambda.Runtime.PYTHON_3_9],
+                                                    compatible_runtimes = [RUNTIME_VERSION],
                                                     #code = _lambda.Code.from_bucket(s3_lib_bucket, s3_file)
                                                     #code = _lambda.Code.from_asset(local_venv_path),
                                                     code = _lambda.Code.from_asset(f"/tmp/{VENV_FOLDER_NAME}.zip"),
@@ -66,7 +67,7 @@ class HelloLambdaStack(Stack):
                 self,
                 LAMBDA_FUNCTION_NAME,
                 #runtime=_lambda.Runtime.PYTHON_3_12,
-                runtime=_lambda.Runtime.PYTHON_3_9,
+                runtime=RUNTIME_VERSION,
                 handler="index.lambda_handler",
                 timeout=cdk.Duration.minutes(3), # 3 minutes
                 memory_size=10240, # max: 10240 MB
