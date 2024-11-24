@@ -23,7 +23,8 @@ LAMBDA_FUNCTION_NAME="MyFunction"
 #S3_LOCATION="{}/{}".format(S3_BASE_LOCATION, LAMBDA_FUNCTION_NAME)
 USER_LAMBDA_LIB_NAME="lambda_layer_lib"
 USER_LAMBDA_REQ_FILE_NAME="requirements.txt"
-VENV_FOLDER_NAME="venv"
+#VENV_FOLDER_NAME="venv"
+VENV_FOLDER_NAME="python"
 
 class VenvExecStatus(Enum):
     NO_REQUIREMENTS_FILE = 1
@@ -64,7 +65,8 @@ class HelloLambdaStack(Stack):
                                                     compatible_runtimes = [_lambda.Runtime.PYTHON_3_9],
                                                     #code = _lambda.Code.from_bucket(s3_lib_bucket, s3_file)
                                                     #code = _lambda.Code.from_asset(local_venv_path),
-                                                    code = _lambda.Code.from_asset(self._get_local_venv_zipped_file_path()),
+                                                    code = _lambda.Code.from_asset(f"/tmp/{VENV_FOLDER_NAME}.zip"),
+                                                    compatible_architectures=[_lambda.Architecture.X86_64],
                                                     removal_policy=RemovalPolicy.DESTROY
                                                     )
             fn = _lambda.Function(
@@ -83,12 +85,14 @@ class HelloLambdaStack(Stack):
             return 
 
         # API gateway
-        endpoint = apigw.LambdaRestApi(
-            self,
-            "ApiGwEndpoint",
-            handler=fn,
-            rest_api_name="HelloApi"
-        )
+        enabled=False
+        if enabled:
+            endpoint = apigw.LambdaRestApi(
+                self,
+                "ApiGwEndpoint",
+                handler=fn,
+                rest_api_name="HelloApi"
+            )
     def _get_local_venv_path(self):
         current_work_dir=os.getcwd()
         local_zipped_venv="{}/{}/{}".format(current_work_dir,USER_LAMBDA_LIB_NAME,VENV_FOLDER_NAME)
@@ -120,12 +124,13 @@ class HelloLambdaStack(Stack):
             try:
                 # Create virtual environment using subprocess
                 venv_name = "{}/{}/{}".format(current_work_dir,USER_LAMBDA_LIB_NAME,VENV_FOLDER_NAME)
+                user_lambda_lib="{}/{}".format(current_work_dir,USER_LAMBDA_LIB_NAME)
                 print(f"Removing virtual environment if it exists: {venv_name}")
                 if os.path.exists(venv_name):
                     shutil.rmtree(venv_name)
-                print(f"Removing zipped virtual environment if it exists: {venv_name}.zip")
-                if os.path.exists(f"{venv_name}.zip"):
-                    os.remove(f"{venv_name}.zip")
+          #      print(f"Removing zipped virtual environment if it exists: {venv_name}.zip")
+          #      if os.path.exists(f"{venv_name}.zip"):
+          #          os.remove(f"{venv_name}.zip")
 
                 print(f"Creating virtual environment: {venv_name}")
                 subprocess.run([sys.executable, "-m", "venv", venv_name], check=True)
@@ -134,14 +139,13 @@ class HelloLambdaStack(Stack):
 
                 # If requirements are provided, install them
                 print("Installing requirements...")
-                subprocess.run([pip_path , "install", "-r", "{}".format(user_lambda_req_file)], check=True)
+                subprocess.run([pip_path , "install", "-r", "{}".format(user_lambda_req_file), "--target={}".format(venv_name)], check=True)
 
                 # Create zip archive of the virtual environment
                 print("Creating zip archive...")
-                #shutil.make_archive(f"{venv_name}", 'zip', venv_name)
-                shutil.make_archive(f"{venv_name}", 'zip', venv_name)
+                shutil.make_archive(base_name="/tmp/"+VENV_FOLDER_NAME, format='zip', root_dir=user_lambda_lib)
 
-                print(f"Virtual environment created and zipped successfully: {venv_name}.zip")
+                print(f"Virtual environment created and zipped successfully: /tmp/{VENV_FOLDER_NAME}.zip")
                 return VenvExecStatus.REQUIREMENTS_EXIST_AND_CREATE_SUCCESS
             except subprocess.CalledProcessError as e:
                 print(f"An error occurred during the process: {e}")
