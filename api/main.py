@@ -43,6 +43,16 @@ ENCODEING="utf-8"
 #        return {"status": "ok"}
 #    else:
 #        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+class Program(BaseModel):
+    codes: str = None
+    requirements_txt: Optional[str] = None
+
+@app.post("/v1/code-generation")
+async def code_generation(program: Program):
+    logger.info('Got 1 program: %s', program)
+    cwd = os.getcwd()
+    logger.info(f"Current Working Directory is: {cwd}")
+
 
 @app.get("/v1/health-check")
 async def health_check():
