@@ -1,7 +1,8 @@
 import logging
 import os
-logger = logging.getLogger(__name__)
 from dotenv import load_dotenv
+import subprocess
+logger = logging.getLogger(__name__)
 
 class Manager:
     def __init__(self):
@@ -26,3 +27,10 @@ class Manager:
             self.save_requirements_txt(requirements)
     def execute(self):
         logger.info("Executing codes")
+        # use aws cdk
+        activate_path=os.getenv('AWS_CDK_VENV_ACTIVATE_PATH')
+        aws_cdk_folder=os.getenv('AWS_CDK_FOLDER')
+        cmd = f"source {activate_path} && cd {aws_cdk_folder} && cdk deploy --require-approval never"
+        subprocess.run(cmd, shell=True, executable="/bin/bash")
+
+
