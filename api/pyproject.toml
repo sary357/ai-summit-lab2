@@ -10,6 +10,8 @@ python = "^3.9"
 fastapi = "^0.115.5"
 uvicorn = "^0.32.1"
 pydantic = "^2.10.1"
+poetry-plugin-dotenv = "^2.5.1"
+python-dotenv = "^1.0.1"
 
 
 [build-system]
