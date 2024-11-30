@@ -1,5 +1,17 @@
 package app
 
+import (
+	"bytes"
+	"fmt"
+	"go-api/config"
+	"go-api/utils"
+	"io"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
+)
+
 type StatsResponse struct {
 	Status string `json:"status"`
 }
@@ -13,4 +25,14 @@ func CheckSystemStatus() StatsResponse {
 	return StatsResponse{Status: "OK"}
 }
 
+func SaveLambdaCodes() {
+}
 
+func SaveRequirementTxt() {
+}
+
+func SaveAll() {
+}
+
+func ExecAwsCdk() {
+}

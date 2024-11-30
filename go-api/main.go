@@ -34,7 +34,7 @@ func main() {
 	routes.SetupHealthCheckRoute(r)
 
 	// for API doc
-	routes.SetupSwagRouter(r)
+	//routes.SetupSwagRouter(r)
 
 
         utils.LogInstance.WithFields(logrus.Fields{
