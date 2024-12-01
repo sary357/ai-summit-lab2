@@ -27,5 +27,5 @@ func GenerateRandomFolderId()  (string) {
 
         // Concatenate the timestamp and random number
         randomId := fmt.Sprintf("%s-%08d", timestamp, randomNumber)
-        return randomId
+	return randomId
 }

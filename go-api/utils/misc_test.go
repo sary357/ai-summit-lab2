@@ -9,7 +9,6 @@ import (
 func TestGenerateUniqueID(t *testing.T) {
         id1 := GenerateRandomFolderId()
         id2 := GenerateRandomFolderId()
-
         // Basic test: IDs should be different
         if id1 == id2 {
                 t.Errorf("Generated IDs are identical: %s", id1)
