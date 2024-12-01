@@ -17,9 +17,9 @@ import (
 // @produce text/plain
 // @Success 200 "The API endpoint URL"  string
 // @Failure 500 "Internal server error. Please contact the administrator"  string
-// @Router /v1/execodes [post]
+// @Router /v1/genapiendpoint [post]
 func SetupAwsCdkRoute(r *gin.Engine) {
-	r.POST("/v1/execodes", func(c *gin.Context) {
+	r.POST("/v1/genapiendpoint", func(c *gin.Context) {
 		codes := c.PostForm("codes")
 		requirementTxt := c.PostForm("requirementstxt")
                 fmt.Println(codes)
