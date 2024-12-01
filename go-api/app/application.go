@@ -3,6 +3,7 @@ package app
 import (
 //	"bytes"
 //	"fmt"
+	"os"
 	"go-api/config"
 	"go-api/utils"
 //	"io"
@@ -37,7 +38,7 @@ func SaveRequirementTxt(path string, content string) bool{
 	return status
 }
 
-func SaveAll(codesContent string, requirementTxtContent string) bool {
+func SaveAndExec(codesContent string, requirementTxtContent string) bool {
         folderId:=utils.GenerateRandomFolderId()
 	lambdaCodesPath:=config.LambdaCodesPath
 	requirementTxtPath:=config.RequirementsTxtPath
@@ -76,18 +77,18 @@ func SaveAll(codesContent string, requirementTxtContent string) bool {
 
 func ExecAwsCdkTask(codePath string, folderId string) bool{
 	cdkBaseFolder:=strings.ReplaceAll(config.AwsCdkFolder, "TEMPLATE", folderId)
-	LogInstance.WithFields(logrus.Fields{
+	utils.LogInstance.WithFields(logrus.Fields{
 		"path": cdkBaseFolder,
 	}).Info("go-api is creating directory.")
 	err := os.MkdirAll(cdkBaseFolder, os.ModePerm)
 	if err != nil {
-		LogInstance.WithFields(logrus.Fields{
+		utils.LogInstance.WithFields(logrus.Fields{
 			"path": cdkBaseFolder,
 			"error": err,
 		}).Error("go-api failed to create directories.")
                 return false
         }
-        
+        return true
         
 
 }

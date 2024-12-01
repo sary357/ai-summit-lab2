@@ -26,10 +26,10 @@ func GenerateRandomFolderId()  (string) {
 
         // Generate a random number between 0 and 999
         rand.Seed(time.Now().UnixNano())
-        randomNumber := rand.Intn(1000)
+        randomNumber := rand.Intn(100000000)
 
         // Concatenate the timestamp and random number
-        randomId := fmt.Sprintf("%s-%03d", timestamp, randomNumber)
+        randomId := fmt.Sprintf("%s-%08d", timestamp, randomNumber)
 	return randomId
 }
 

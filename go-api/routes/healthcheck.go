@@ -22,3 +22,5 @@ func SetupHealthCheckRoute(r *gin.Engine) {
 		c.JSON(200, status)
 	})
 }
+
+

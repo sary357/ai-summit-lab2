@@ -35,11 +35,11 @@ func main() {
 
 	// for API doc
 	//routes.SetupSwagRouter(r)
-
+        routes.SetupAwsCdkRoute(r)
 
         utils.LogInstance.WithFields(logrus.Fields{
 		"Host": utils.GetHostname(),
-	}).Info("ggv-meta-api-service is starting. If there is no error message, it means the service is ready.")
+	}).Info("go-api is starting. If there is no error message, it means the service is ready.")
 
 	r.Run("0.0.0.0:" + strconv.Itoa(config.Port)) // listen and serve on 0.0.0.0:8080
 
