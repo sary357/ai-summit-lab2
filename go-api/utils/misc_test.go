@@ -4,6 +4,8 @@ import (
         "testing"
 	"time"
 	"strconv"
+	"io/ioutil"
+        "os"
 )
 
 func TestGenerateUniqueID(t *testing.T) {
@@ -30,5 +32,30 @@ func TestGenerateUniqueID(t *testing.T) {
         randomNumber, err := strconv.Atoi(id1[19:])
         if err != nil || randomNumber < 0 || randomNumber >= 100000000 {
                 t.Errorf("Invalid random number format: %s", id1)
+        }
+}
+
+func TestSaveContentToFile(t *testing.T) {
+        tempDir, err := ioutil.TempDir("", "test")
+        if err != nil {
+                t.Fatal(err)
+        }
+        defer os.RemoveAll(tempDir)
+
+        filePath := tempDir + "/test.txt"
+        content := ("Hello, world!")
+
+        if !SaveFile(filePath, content) {
+                t.Error("Failed to save content to file")
+        }
+
+        // Verify the content of the file
+        fileBytes, err := ioutil.ReadFile(filePath)
+        if err != nil {
+                t.Error("Failed to read file")
+        }
+
+        if string(fileBytes) != string(content) {
+                t.Errorf("File content mismatch: expected %s, got %s", string(content), string(fileBytes))
         }
 }

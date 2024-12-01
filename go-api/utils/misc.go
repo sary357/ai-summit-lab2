@@ -5,6 +5,8 @@ import (
 	"fmt"
         "math/rand"
         "time"
+	"io/ioutil"
+	"path/filepath"
 )
 
 func GetHostname() (hostName string) {
@@ -28,4 +30,22 @@ func GenerateRandomFolderId()  (string) {
         // Concatenate the timestamp and random number
         randomId := fmt.Sprintf("%s-%08d", timestamp, randomNumber)
 	return randomId
+}
+
+func SaveFile(path string, content string) bool {
+	file_content := []byte(content)
+        err := os.MkdirAll(filepath.Dir(path), os.ModePerm)
+        if err != nil {
+                fmt.Println("Error creating directory:", err)
+                return false
+        }
+
+        // Write the content to the file
+        err = ioutil.WriteFile(path, file_content, 0644)
+        if err != nil {
+                fmt.Println("Error writing to file:", err)
+                return false
+        }
+
+        return true
 }
