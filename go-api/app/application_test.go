@@ -10,3 +10,12 @@ func TestCheckSystemStatus(t *testing.T) {
 		t.Error("CheckSystemStatus() failed, expected OK, got ", status.Status)
 	}
 }
+
+func TestSaveAll(t *testing.T) {
+       status := SaveAll("This is my codes", "requirements") 
+       if status != true {
+		t.Error("SaveAll failed, expected True, got ", status)
+       }
+         
+}
+
