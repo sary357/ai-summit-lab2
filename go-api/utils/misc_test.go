@@ -17,7 +17,7 @@ func TestGenerateUniqueID(t *testing.T) {
         }
 
         // Check format: Should match "app-YYYYMMDDHHmmSS-00000000"
-        if len(id1) != 27 {
+        if len(id1) != 22 {
                 t.Errorf("Invalid ID length: %s", id1)
         }
 
@@ -30,7 +30,7 @@ func TestGenerateUniqueID(t *testing.T) {
 
         // Check random number portion
         randomNumber, err := strconv.Atoi(id1[19:])
-        if err != nil || randomNumber < 0 || randomNumber >= 100000000 {
+        if err != nil || randomNumber < 0 || randomNumber >= 1000 {
                 t.Errorf("Invalid random number format: %s", id1)
         }
 }

@@ -37,12 +37,13 @@ func SaveRequirementTxt(path string, content string) bool{
 	return status
 }
 
-func SaveAll (codesContent string, requirementTxtContent string) bool {
+func SaveAll(codesContent string, requirementTxtContent string) bool {
         folderId:=utils.GenerateRandomFolderId()
 	lambdaCodesPath:=config.LambdaCodesPath
 	requirementTxtPath:=config.RequirementsTxtPath
 	// TODO: execute aws sdk
-
+	
+        
         // generate folder name with random postfix
 	realLambdaCodesPath:=strings.ReplaceAll(lambdaCodesPath, "TEMPLATE", folderId)
 	realRequirementTxtPath:=strings.ReplaceAll(requirementTxtPath, "TEMPLATE", folderId)
@@ -50,7 +51,7 @@ func SaveAll (codesContent string, requirementTxtContent string) bool {
 	status:=SaveAwsLambdaCodes(realLambdaCodesPath, codesContent)
 
 	utils.LogInstance.WithFields(logrus.Fields{
-		"SaveAwsLambdaCode status": status,
+		"SaveAwsLambdaCodeStatus": status,
 		"path": realLambdaCodesPath,
 		"content": codesContent,
 	}).Info("go-api is trying to save AWS lambda codes to the path.")
@@ -59,7 +60,7 @@ func SaveAll (codesContent string, requirementTxtContent string) bool {
 		if len(requirementTxtContent) > 0 {
 			requirementSavedStatus :=  SaveRequirementTxt(realRequirementTxtPath, requirementTxtContent)
 			utils.LogInstance.WithFields(logrus.Fields{
-				"SaveRequirementTxt": requirementSavedStatus,
+				"SaveRequirementTxtStatus": requirementSavedStatus,
 				"path": realRequirementTxtPath,
 				"content": requirementTxtContent,
 			}).Info("go-api is trying to save requirement.txt to the path.")
@@ -73,5 +74,22 @@ func SaveAll (codesContent string, requirementTxtContent string) bool {
 	}
 }
 
+func ExecAwsCdkTask(codePath string, folderId string) bool{
+	cdkBaseFolder:=strings.ReplaceAll(config.AwsCdkFolder, "TEMPLATE", folderId)
+	LogInstance.WithFields(logrus.Fields{
+		"path": cdkBaseFolder,
+	}).Info("go-api is creating directory.")
+	err := os.MkdirAll(cdkBaseFolder, os.ModePerm)
+	if err != nil {
+		LogInstance.WithFields(logrus.Fields{
+			"path": cdkBaseFolder,
+			"error": err,
+		}).Error("go-api failed to create directories.")
+                return false
+        }
+        
+        
+
+}
 //func ExecAwsCdk() {
 //}
