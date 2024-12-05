@@ -1,9 +1,8 @@
 package route
 
 import (
-	"go-api/app"
-
 	"github.com/gin-gonic/gin"
+	"go-api/app"
 )
 
 // StatsResponse is the response for health check
@@ -18,7 +17,7 @@ import (
 // @Router /healthcheck [get]
 func SetupHealthCheckRoute(r *gin.Engine) {
 	status := app.CheckSystemStatus()
-	r.GET("/healthcheck", func(c *gin.Context) {
+	r.GET("/v1/healthcheck", func(c *gin.Context) {
 		c.JSON(200, status)
 	})
 }

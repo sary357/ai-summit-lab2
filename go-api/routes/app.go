@@ -1,14 +1,11 @@
 package route
 
 import (
-	//"fmt"
-	//"encoding/json"
 	"net/http"
-	//"go-api/app"
-	"go-api/utils"
-
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"go-api/app"
+	"go-api/utils"
 )
 
 type CodeAndRelatedObject struct {
@@ -28,7 +25,6 @@ type CodeAndRelatedObject struct {
 func SetupAwsCdkRoute(r *gin.Engine) {
 	r.POST("/v1/genapiendpoint", func(c *gin.Context) {
 		var codeAndRelatedObject CodeAndRelatedObject
-	//	decoder := json.NewDecoder(r.Body)
 
 		if err := c.ShouldBindJSON(&codeAndRelatedObject); err != nil {
 			utils.LogInstance.WithFields(logrus.Fields{
@@ -38,13 +34,15 @@ func SetupAwsCdkRoute(r *gin.Engine) {
                         return
                 }
 
-          //      fmt.Println("\nCodes: %s\nrequirements.txt: %s\n", codeAndRelatedObject.Code, codeAndRelatedObject.RequirementTxt)
 		utils.LogInstance.WithFields(logrus.Fields{
                 	"codes": codeAndRelatedObject.Code,
                 	"requirementstxt": codeAndRelatedObject.RequirementTxt,
-        	}).Info("go-api receiving the user's inputs.")
+        	}).Info("user's inputs.")
 
-		c.JSON(200, "https://xxx.xxx.xxx/abc")
+		// start to process 
+		status:=app.SaveAndExec(codeAndRelatedObject.Code, codeAndRelatedObject.RequirementTxt)
+
+		c.JSON(200, status)
 	})
 }
 
