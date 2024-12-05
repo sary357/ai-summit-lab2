@@ -42,7 +42,7 @@ func SetupAwsCdkRoute(r *gin.Engine) {
 		// start to process 
 		status:=app.SaveAndExec(codeAndRelatedObject.Code, codeAndRelatedObject.RequirementTxt)
 
-		c.JSON(200, status)
+		c.JSON(http.StatusOK, status)
 	})
 }
 

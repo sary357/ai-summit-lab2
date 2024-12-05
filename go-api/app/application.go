@@ -17,6 +17,7 @@ import (
 
 type StatsResponse struct {
 	Status string `json:"status"`
+	Info string `json:"info"`
 }
 
 // TODO: Please define business logic in this folder or create a new folder for it.
