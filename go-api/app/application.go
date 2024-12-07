@@ -89,6 +89,8 @@ func ExecAwsCdkTask(codePath string, folderId string) bool{
 		}).Error("go-api failed to create directories.")
                 return false
         }
+
+	
         return true
         
 

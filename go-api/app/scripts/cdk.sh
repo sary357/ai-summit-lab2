@@ -25,7 +25,7 @@ replacement_string="${tmp_python_stack_file//-/}"Stack
 sed  -i "s/$REPLACE_TARGET/$replacement_string/g" $TMP_FOLDER/$generated_python_stack_file_prefix\_stack.py
 sed  -i "s/class\ app/class\ App/g" $TMP_FOLDER/$generated_python_stack_file_prefix\_stack.py
 echo "1. generating python stack file: Done..."
-#exit 0
+
 # generate aws cdk files
 echo "2. generating aws cdk files..."
 mkdir -p $1
