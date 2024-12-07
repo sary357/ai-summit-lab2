@@ -9,7 +9,7 @@ import (
 )
 
 type CodeAndRelatedObject struct {
-    Code string `json:"code"`
+    Codes string `json:"codes"`
     RequirementTxt string `json:"requirementTxt"`
 }
 
@@ -35,12 +35,12 @@ func SetupAwsCdkRoute(r *gin.Engine) {
                 }
 
 		utils.LogInstance.WithFields(logrus.Fields{
-                	"codes": codeAndRelatedObject.Code,
+                	"codes": codeAndRelatedObject.Codes,
                 	"requirementstxt": codeAndRelatedObject.RequirementTxt,
         	}).Info("user's inputs.")
 
 		// start to process 
-		status:=app.SaveAndExec(codeAndRelatedObject.Code, codeAndRelatedObject.RequirementTxt)
+		status:=app.SaveAndExec(codeAndRelatedObject.Codes, codeAndRelatedObject.RequirementTxt)
 
 		c.JSON(http.StatusOK, status)
 	})

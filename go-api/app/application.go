@@ -37,7 +37,7 @@ func SaveAndExec(codesContent string, requirementTxtContent string) bool {
 	requirementTxtPath:=config.RequirementsTxtPath
 	// execute aws sdk: Part 1
 	status:=ExecAwsCdkTask(folderId)
-	if status != true {
+	if !status {
 		 utils.LogInstance.WithFields(logrus.Fields{
 			 "ExecAwsCdkTask": status,
 			 "folderId": folderId,
@@ -57,22 +57,24 @@ func SaveAndExec(codesContent string, requirementTxtContent string) bool {
 		"content": codesContent,
 	}).Info("go-api is trying to save AWS lambda codes to the path.")
 
-	if status {
-		if len(requirementTxtContent) > 0 {
-			requirementSavedStatus :=  SaveRequirementTxt(realRequirementTxtPath, requirementTxtContent)
-			utils.LogInstance.WithFields(logrus.Fields{
-				"SaveRequirementTxtStatus": requirementSavedStatus,
-				"path": realRequirementTxtPath,
-				"content": requirementTxtContent,
-			}).Info("go-api is trying to save requirement.txt to the path.")
-
-			return requirementSavedStatus
-		} else {
-			return true
-		}
-	} else {
+	if !status {
 		return false
 	}
+
+	// we have requirements.txt
+	if len(requirementTxtContent) >= 0 {
+		requirementSavedStatus :=  SaveRequirementTxt(realRequirementTxtPath, requirementTxtContent)
+		utils.LogInstance.WithFields(logrus.Fields{
+			"SaveRequirementTxtStatus": requirementSavedStatus,
+			"path": realRequirementTxtPath,
+			"content": requirementTxtContent,
+		}).Info("go-api is trying to save requirement.txt to the path.")
+
+		if !requirementSavedStatus {
+			return false
+		}
+	}
+	return true
 }
 
 func ExecAwsCdkTask(folderId string) bool{
@@ -96,7 +98,7 @@ func ExecAwsCdkTask(folderId string) bool{
 		}).Error("go-api failed to get current working dir.")
 		return false
 	}
-	cdkScriptPath:=workingDir+"/app/scripts/cdk.sh"
+	cdkScriptPath:=workingDir+"/app/scripts/init_cdk_env.sh"
 	cmd := exec.Command("bash", cdkScriptPath, cdkBaseFolder)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
