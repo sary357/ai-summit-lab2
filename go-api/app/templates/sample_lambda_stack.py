@@ -83,7 +83,7 @@ class SampleLambdaStack(Stack):
         if enabled:
             endpoint = apigw.LambdaRestApi(
                 self,
-                "ApiGwEndpoint",
+                "SampleLambdaStack",
                 handler=fn,
                 rest_api_name="SampleLambdaStack"
             )

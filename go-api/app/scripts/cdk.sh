@@ -17,15 +17,15 @@ REPLACE_TARGET="SampleLambdaStack"
 # generate python stack file
 echo "1. generating python stack file..."
 current_dir=$(dirname "$0")
-template_py=$current_dir/template/sample_lambda_stack.py
+template_py=$current_dir/../templates/sample_lambda_stack.py
 tmp_python_stack_file=`basename $1`
-generated_python_stack_file="${tmp_python_stack_file//-/_}"
-cp $(dirname "$0")/template/sample_lambda_stack.py $TMP_FOLDER/$generated_python_stack_file\_stack.py
+generated_python_stack_file_prefix="${tmp_python_stack_file//-/_}"
+cp $(dirname "$0")/../templates/sample_lambda_stack.py $TMP_FOLDER/$generated_python_stack_file_prefix\_stack.py
 replacement_string="${tmp_python_stack_file//-/}"Stack
-sed  -i "s/$REPLACE_TARGET/$replacement_string/g" $TMP_FOLDER/$generated_python_stack_file\_stack.py
-sed  -i "s/class\ app/class\ App/g" $TMP_FOLDER/$generated_python_stack_file\_stack.py
+sed  -i "s/$REPLACE_TARGET/$replacement_string/g" $TMP_FOLDER/$generated_python_stack_file_prefix\_stack.py
+sed  -i "s/class\ app/class\ App/g" $TMP_FOLDER/$generated_python_stack_file_prefix\_stack.py
 echo "1. generating python stack file: Done..."
-
+#exit 0
 # generate aws cdk files
 echo "2. generating aws cdk files..."
 mkdir -p $1
@@ -37,4 +37,4 @@ python -m pip install -r requirements.txt
 echo "2. generating aws cdk files: Done..."
 
 # copy python stack file to aws cdk folder and replace the corresponding string ("SampleLambdaStack")
-cp $TMP_FOLDER/$generated_python_stack_file\_stack.py ./$generated_python_stack_file/
+cp $TMP_FOLDER/$generated_python_stack_file_prefix\_stack.py ./$generated_python_stack_file_prefix/

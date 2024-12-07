@@ -43,7 +43,7 @@ func SaveAndExec(codesContent string, requirementTxtContent string) bool {
         folderId:=utils.GenerateRandomFolderId()
 	lambdaCodesPath:=config.LambdaCodesPath
 	requirementTxtPath:=config.RequirementsTxtPath
-	// TODO: execute aws sdk
+	// TODO: execute aws sdk: Part 1
 	
         
         // generate folder name with random postfix
