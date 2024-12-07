@@ -1,19 +1,14 @@
 package app
 
 import (
-//	"bytes"
-//	"fmt"
 	"os"
+	"strings"
+	//"fmt"
+	"os/exec"
+	"github.com/sirupsen/logrus"
 	"go-api/config"
 	"go-api/utils"
-//	"io"
-//	"net/http"
-        "strings"
-//	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
-
-
 
 type StatsResponse struct {
 	Status string `json:"status"`
@@ -44,13 +39,20 @@ func SaveAndExec(codesContent string, requirementTxtContent string) bool {
 	lambdaCodesPath:=config.LambdaCodesPath
 	requirementTxtPath:=config.RequirementsTxtPath
 	// TODO: execute aws sdk: Part 1
-	
+	status:=ExecAwsCdkTask(folderId)
+	if status != true {
+		 utils.LogInstance.WithFields(logrus.Fields{
+			 "ExecAwsCdkTask": status,
+			 "folderId": folderId,
+		 }).Info("go-api is trying to execute AWS CDK but failed.")
+		return false
+	}
         
         // generate folder name with random postfix
 	realLambdaCodesPath:=strings.ReplaceAll(lambdaCodesPath, "TEMPLATE", folderId)
 	realRequirementTxtPath:=strings.ReplaceAll(requirementTxtPath, "TEMPLATE", folderId)
 
-	status:=SaveAwsLambdaCodes(realLambdaCodesPath, codesContent)
+	status=SaveAwsLambdaCodes(realLambdaCodesPath, codesContent)
 
 	utils.LogInstance.WithFields(logrus.Fields{
 		"SaveAwsLambdaCodeStatus": status,
@@ -76,7 +78,7 @@ func SaveAndExec(codesContent string, requirementTxtContent string) bool {
 	}
 }
 
-func ExecAwsCdkTask(codePath string, folderId string) bool{
+func ExecAwsCdkTask(folderId string) bool{
 	cdkBaseFolder:=strings.ReplaceAll(config.AwsCdkFolder, "TEMPLATE", folderId)
 	utils.LogInstance.WithFields(logrus.Fields{
 		"path": cdkBaseFolder,
@@ -90,7 +92,29 @@ func ExecAwsCdkTask(codePath string, folderId string) bool{
                 return false
         }
 
-	
+	workingDir, err := os.Getwd()
+	if err != nil {
+		utils.LogInstance.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("go-api failed to get current working dir.")
+		return false
+	}
+	cdkScriptPath:=workingDir+"/app/scripts/cdk.sh"
+	cmd := exec.Command("bash", cdkScriptPath, cdkBaseFolder)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		utils.LogInstance.WithFields(logrus.Fields{
+			"cdkScriptPath": cdkScriptPath,
+			"error": err,
+		}).Error("go-api failed to execute cdk script.")
+
+		return false
+	}
+
+	utils.LogInstance.WithFields(logrus.Fields{
+		"cdkScriptPath": cdkScriptPath,
+		"stdout": output,
+	}).Info("go-api executed cdk script successfully.")
         return true
         
 
