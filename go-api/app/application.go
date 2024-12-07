@@ -15,9 +15,6 @@ type StatsResponse struct {
 	Info string `json:"info"`
 }
 
-// TODO: Please define business logic in this folder or create a new folder for it.
-// The following codes are just an example.
-
 // CheckSystemStatus is used to check the system status
 func CheckSystemStatus() StatsResponse {
 	// TODO: Please define how to check the system status
@@ -38,7 +35,7 @@ func SaveAndExec(codesContent string, requirementTxtContent string) bool {
         folderId:=utils.GenerateRandomFolderId()
 	lambdaCodesPath:=config.LambdaCodesPath
 	requirementTxtPath:=config.RequirementsTxtPath
-	// TODO: execute aws sdk: Part 1
+	// execute aws sdk: Part 1
 	status:=ExecAwsCdkTask(folderId)
 	if status != true {
 		 utils.LogInstance.WithFields(logrus.Fields{

@@ -21,9 +21,9 @@ type CodeAndRelatedObject struct {
 // @produce text/plain
 // @Success 200 "The API endpoint URL"  string
 // @Failure 500 "Internal server error. Please contact the administrator"  string
-// @Router /v1/genapiendpoint [post]
+// @Router /v1/genapi [post]
 func SetupAwsCdkRoute(r *gin.Engine) {
-	r.POST("/v1/genapiendpoint", func(c *gin.Context) {
+	r.POST("/v1/genapi", func(c *gin.Context) {
 		var codeAndRelatedObject CodeAndRelatedObject
 
 		if err := c.ShouldBindJSON(&codeAndRelatedObject); err != nil {
