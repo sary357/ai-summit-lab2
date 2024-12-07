@@ -35,10 +35,10 @@ class SampleLambdaStack(Stack):
 
         # prepare necessary libraries with subprocess
         venv_status=self._generate_layer_lib()
-        print(f"virtual environment created status: {venv_status}")
- 
+        print("virtual environment created status: {}, {}".format(venv_status[0], venv_status[1]))
+
         # lambda
-        if venv_status == VenvExecStatus.NO_REQUIREMENTS_FILE:
+        if venv_status[0] == VenvExecStatus.NO_REQUIREMENTS_FILE:
             fn = _lambda.Function(
                 self,
                 LAMBDA_FUNCTION_NAME,
@@ -49,7 +49,7 @@ class SampleLambdaStack(Stack):
                 memory_size=10240, # max: 10240 MB
                 code=_lambda.Code.from_asset("lib/lambda-handler")
             )
-        elif venv_status == VenvExecStatus.REQUIREMENTS_EXIST_AND_CREATE_SUCCESS:
+        elif venv_status[0] == VenvExecStatus.REQUIREMENTS_EXIST_AND_CREATE_SUCCESS:
             local_venv_path=self._get_local_venv_path()
             print(f"Local venv: {local_venv_path}")
             # layer
@@ -59,7 +59,7 @@ class SampleLambdaStack(Stack):
                                                     compatible_runtimes = [RUNTIME_VERSION],
                                                     #code = _lambda.Code.from_bucket(s3_lib_bucket, s3_file)
                                                     #code = _lambda.Code.from_asset(local_venv_path),
-                                                    code = _lambda.Code.from_asset(f"/tmp/{VENV_FOLDER_NAME}.zip"),
+                                                    code = _lambda.Code.from_asset(venv_status[1]),
                                                     compatible_architectures=[_lambda.Architecture.X86_64],
                                                     removal_policy=RemovalPolicy.DESTROY
                                                     )
@@ -74,7 +74,7 @@ class SampleLambdaStack(Stack):
                 code=_lambda.Code.from_asset(os.getcwd()+"/lib/lambda-handler"),
                 layers = [custom_lib_layer]
                 )
-        elif venv_status == VenvExecStatus.REQUIREMENTS_EXIST_BUT_FAILED:
+        elif venv_status[0] == VenvExecStatus.REQUIREMENTS_EXIST_BUT_FAILED:
             print("Failed to create virtual environment. Exit!!")
             return 
 
@@ -92,7 +92,7 @@ class SampleLambdaStack(Stack):
         local_zipped_venv="{}/{}/{}".format(current_work_dir,USER_LAMBDA_LIB_NAME,VENV_FOLDER_NAME)
         return local_zipped_venv
  
-    def _generate_layer_lib(self) -> VenvExecStatus:
+    def _generate_layer_lib(self) -> list:
         current_work_dir=os.getcwd()
         user_lambda_req_file="{}/{}/{}".format(current_work_dir,USER_LAMBDA_LIB_NAME,USER_LAMBDA_REQ_FILE_NAME)
         print(f"Requirements for user's lambda function: {user_lambda_req_file}")
@@ -119,14 +119,31 @@ class SampleLambdaStack(Stack):
 
                 # Create zip archive of the virtual environment
                 print("Creating zip archive...")
-                shutil.make_archive(base_name="/tmp/"+VENV_FOLDER_NAME, format='zip', root_dir=user_lambda_lib)
+                venv_folder = "/tmp/" + generate_random_number() + "/"
+                shutil.make_archive(base_name=venv_folder+VENV_FOLDER_NAME, format='zip', root_dir=user_lambda_lib)
 
-                print(f"Virtual environment created and zipped successfully: /tmp/{VENV_FOLDER_NAME}.zip")
-                return VenvExecStatus.REQUIREMENTS_EXIST_AND_CREATE_SUCCESS
+                print(f"Virtual environment created and zipped successfully: {venv_folder}/{VENV_FOLDER_NAME}.zip")
+                return (VenvExecStatus.REQUIREMENTS_EXIST_AND_CREATE_SUCCESS, f"{venv_folder}/{VENV_FOLDER_NAME}.zip")
             except subprocess.CalledProcessError as e:
                 print(f"An error occurred during the process: {e}")
-                return VenvExecStatus.REQUIREMENTS_EXIST_BUT_FAILED
+                return (VenvExecStatus.REQUIREMENTS_EXIST_BUT_FAILED, None)
             except Exception as e:
                 print(f"An unexpected error occurred: {e}")
-                return VenvExecStatus.REQUIREMENTS_EXIST_BUT_FAILED
+                return (VenvExecStatus.REQUIREMENTS_EXIST_BUT_FAILED, None)
 
+
+def generate_random_number()->str:
+    """Generates a random number in the specified format.
+
+    Returns:
+        str: A string representing the random number in the format "app-YYYYMMDDhhmmss-{NUMBER}".
+    """
+
+    now = datetime.datetime.now()
+    year = now.strftime("%Y")
+    month = now.strftime("%m")
+    day = now.strftime("%d")
+    time = now.strftime("%H%M%S")
+    random_number = str(random.randint(10000000, 99999999))
+
+    return f"app-{year}{month}{day}{time}-{random_number}"
