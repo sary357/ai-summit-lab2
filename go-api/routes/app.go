@@ -1,6 +1,7 @@
 package route
 
 import (
+	"strings"
 	"net/http"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -9,10 +10,14 @@ import (
 )
 
 type CodeAndRelatedObject struct {
-    Codes string `json:"codes"`
-    RequirementTxt string `json:"requirementTxt"`
+	Codes string `json:"codes"`
+	RequirementTxt string `json:"requirementTxt"`
 }
 
+type ReturnObj struct {
+	Endpoint string `json:"endpoint"`
+	Message string `json:"message"`
+}
 
 // @Summary save AWS lambda codes and requirements.txt from langchain side
 // @Description this return status after checking the system. However, it always returns "OK" at this moment.
@@ -41,8 +46,20 @@ func SetupAwsCdkRoute(r *gin.Engine) {
 
 		// start to process 
 		status:=app.SaveAndExec(codeAndRelatedObject.Codes, codeAndRelatedObject.RequirementTxt)
-
-		c.JSON(http.StatusOK, status)
+		//status:= "https://ihznxmqgj9.execute-api.ap-northeast-1.amazonaws.com/prod/"
+		if strings.Contains(status, "ERR") {
+			retObj := ReturnObj{
+				Endpoint: "",
+				Message: status,
+			}
+                        c.JSON(http.StatusBadRequest, retObj)
+		} else {
+			retObj := ReturnObj{
+                                Endpoint: status,
+                                Message: "",
+                        }
+			c.JSON(http.StatusOK, retObj)
+		}
 	})
 }
 

@@ -31,18 +31,18 @@ func SaveRequirementTxt(path string, content string) bool{
 	return status
 }
 
-func SaveAndExec(codesContent string, requirementTxtContent string) bool {
+func SaveAndExec(codesContent string, requirementTxtContent string) string {
         folderId:=utils.GenerateRandomFolderId()
 	lambdaCodesPath:=config.LambdaCodesPath
 	requirementTxtPath:=config.RequirementsTxtPath
 	// execute aws sdk: Part 1
-	status:=ExecAwsCdkTask(folderId)
+	status:=InitAwsCdkTask(folderId)
 	if !status {
 		 utils.LogInstance.WithFields(logrus.Fields{
-			 "ExecAwsCdkTask": status,
+			 "InitAwsCdkTask": status,
 			 "folderId": folderId,
 		 }).Info("go-api is trying to execute AWS CDK but failed.")
-		return false
+		 return "ERR: 1001" // failed to execute AWS CDK task
 	}
         
         // generate folder name with random postfix
@@ -58,7 +58,7 @@ func SaveAndExec(codesContent string, requirementTxtContent string) bool {
 	}).Info("go-api is trying to save AWS lambda codes to the path.")
 
 	if !status {
-		return false
+		return "ERR: 2001" // failed to save files
 	}
 
 	// we have requirements.txt
@@ -71,13 +71,20 @@ func SaveAndExec(codesContent string, requirementTxtContent string) bool {
 		}).Info("go-api is trying to save requirement.txt to the path.")
 
 		if !requirementSavedStatus {
-			return false
+			return "ERR: 2001" // failed to save files
 		}
 	}
-	return true
+        
+	// let's deploy...
+	cdkDeployEndpoint := ExecAwsCdk(folderId)
+        if len(cdkDeployEndpoint) > 0 {
+		return cdkDeployEndpoint
+	} else {
+		return "ERR: 1001"
+	}
 }
 
-func ExecAwsCdkTask(folderId string) bool{
+func InitAwsCdkTask(folderId string) bool{
 	cdkBaseFolder:=strings.ReplaceAll(config.AwsCdkFolder, "TEMPLATE", folderId)
 	utils.LogInstance.WithFields(logrus.Fields{
 		"path": cdkBaseFolder,
@@ -115,8 +122,29 @@ func ExecAwsCdkTask(folderId string) bool{
 		"stdout": output,
 	}).Info("go-api executed cdk script successfully.")
         return true
-        
-
 }
-//func ExecAwsCdk() {
-//}
+
+func ExecAwsCdk(folderId string) string{
+	cdkBaseFolder:=strings.ReplaceAll(config.AwsCdkFolder, "TEMPLATE", folderId)
+
+	workingDir, err := os.Getwd()
+	if err != nil {
+		utils.LogInstance.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("go-api failed to get current working dir.")
+		return ""
+	}
+
+	cdkScriptPath:=workingDir+"/app/scripts/deploy_cdk_app.sh"
+	cmd := exec.Command("bash", cdkScriptPath, cdkBaseFolder)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		utils.LogInstance.WithFields(logrus.Fields{
+			"cdkScriptPath": cdkScriptPath,
+			"error": err,
+		}).Error("go-api failed to execute cdk script.")
+
+		return ""
+	}
+	return strings.TrimSpace(string(output))
+}
