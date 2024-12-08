@@ -11,8 +11,8 @@ import os,sys
 import subprocess
 import shutil
 from enum import Enum
-import boto3
-from botocore.exceptions import ClientError
+# import boto3
+# from botocore.exceptions import ClientError
 import os
 import datetime
 import random
@@ -83,7 +83,7 @@ class SampleLambdaStack(Stack):
         if enabled:
             endpoint = apigw.LambdaRestApi(
                 self,
-                "SampleLambdaStack",
+                "SampleLambdaStack_api",
                 handler=fn,
                 rest_api_name="SampleLambdaStack"
             )
