@@ -1,3 +1,5 @@
+# Deprecated...
+- This is just for my test. Please check [go-api]( ../go-api/)
 
 # Welcome to your CDK Python project!
 
