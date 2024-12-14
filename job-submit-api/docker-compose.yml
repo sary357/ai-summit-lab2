@@ -1,0 +1,15 @@
+version: "2.3"
+services:
+  db:
+    image: postgres
+    ports:
+      - 5432:5432
+    container_name: ai-summit-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: CHANGE_ME
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./:/var/lib/postgresql/data/
+
+  
