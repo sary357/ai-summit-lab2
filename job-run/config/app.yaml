@@ -1,0 +1,9 @@
+application:
+  port: 8080
+  publicdomainname: localhost
+  lambda_codes_path: "./aws/TEMPLATE/lib/lambda-handler/index.py"
+  requirements_txt_path: "./aws/TEMPLATE/lambda_layer_lib/requirements.txt"
+  aws_cdk_venv_activate_path: "./aws/TEMPLATE/.venv/bin/activate"
+  aws_cdk_folder: "./aws/TEMPLATE/"
+
+  
