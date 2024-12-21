@@ -27,6 +27,10 @@ func TestAwsCdkFolder(t *testing.T) {
 	//TODO: Please check the variable name and value according to your requirement
 	assert.Equal(t, AwsCdkFolder, "./aws/TEMPLATE/")
 }
+func TestJobBaseUrl(t *testing.T) {
+	//TODO: Please check the variable name and value according to your requirement
+	assert.Equal(t, JobBaseUrl, "http://localhost:8081/v1")
+}
 
 //  lambda_codes_path: "../TEMPLATE/lib/lambda-handler/index.py"
 //  requirements_txt_path: "../TEMPLATE/lambda_layer_lib/requirements.txt"

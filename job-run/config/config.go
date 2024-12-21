@@ -10,7 +10,7 @@ var RequirementsTxtPath string
 var AwsCdkVenvActivatePath string
 var AwsCdkFolder string
 var Host string
-
+var JobBaseUrl string
 func init() {
 	viper.SetConfigName("app")
 	viper.SetConfigType("yaml")
@@ -28,5 +28,6 @@ func init() {
 	RequirementsTxtPath = viper.GetString("application.requirements_txt_path")
 	AwsCdkVenvActivatePath = viper.GetString("application.aws_cdk_venv_activate_path")
 	AwsCdkFolder = viper.GetString("application.aws_cdk_folder")
+	JobBaseUrl = viper.GetString("application.job_base_url")
 
 }
