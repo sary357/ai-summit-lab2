@@ -1,10 +1,12 @@
-# 請先讀我 
-## Folder structure
-```
-go-api: it accepts http request and generate API gateway/lambda functions with AWS CDK. It takes 2 or 3 minutes for each request because of AWS CDK.
------
-job-submit-api: it access http request and save contents in the database.
-job-run: it query job-submit-api and get job info to execute.
+# Folder structure
+## go-api
+- it accepts http request and generate API gateway/lambda functions with AWS CDK. It takes 2 or 3 minutes for each request because of AWS CDK. There is no relations between go-api and job-submit-api and job-run. We can execute it alone.
+## job-submit-api and job-run
+- We have to execute both of them. 
+  - job-submit-api: it access http request and save contents in the database.
+  - job-run: it query job-submit-api and get job info to execute. Before we execute `job-run`, we must be sure `job-submit-api` is ready.
+
+# AWS IAM setting
 ```
 ## AWS IAM setting
 - The following is my IAM Policies
