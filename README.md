@@ -89,3 +89,29 @@ $ sh start.sh
 ```
 
 - about how to use the API, please refer to the [doc](job-submit-api/docs/v1/README.md)
+
+# job-run
+- Prerequisite: Go version >= 1.17 & Python >= 3.9 & job-submit-api is ready
+- go to the folder `job-rub`
+```
+$ cd job-run
+```
+
+- run `go init`
+```
+$ go mod init job-run
+```
+
+- run `go mod tidy`
+```
+$ go mod tidy
+```
+
+- ideally you can start the application with the command
+```
+$ go run .
+job-run is running. If there is no error message, it means the service is ready. Press Ctl-C to Exit
+```
+
+- please check `logs/api.log` to know the status.
+
