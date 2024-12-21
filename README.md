@@ -71,7 +71,7 @@ $ cd job-submit-api
 ```
 $ docker-compose up -d
 ```
-- create database and table with the [SQL script]("job-submit-api/sql/create_tables.sql")
+- create database and table with the [SQL script](job-submit-api/sql/create_tables.sql)
 - prepare virtual env
 ```
 $ python3 -m venv venv
@@ -83,9 +83,9 @@ $ source venv/bin/activitate
 $ pip install -r requirements.txt
 ```
 
-- start the server the the script [start.sh]("job-submit-api/start.sh")
+- start the server the the script [start.sh](job-submit-api/start.sh)
 ```
 $ sh start.sh
 ```
 
-- about how to use the API, please refer to the [doc]("job-submit-api/docs/v1/README.md")
+- about how to use the API, please refer to the [doc](job-submit-api/docs/v1/README.md)
