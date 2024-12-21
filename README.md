@@ -7,8 +7,6 @@
   - job-run: it query job-submit-api and get job info to execute. Before we execute `job-run`, we must be sure `job-submit-api` is ready.
 
 # AWS IAM setting
-```
-## AWS IAM setting
 - The following is my IAM Policies
   - AmazonAPIGatewayAdministrator
   - AmazonEC2ContainerRegistryFullAccess
