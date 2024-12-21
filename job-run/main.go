@@ -1,11 +1,11 @@
 package main
 
 import (
-      //  "github.com/gin-gonic/gin"
         "strings"
         "bytes"
         "encoding/json"
         "fmt"
+	"time"
         "net/http"
         "github.com/sirupsen/logrus"
         "job-run/app"
@@ -59,12 +59,20 @@ func sendRequest(url string, requestData interface{}, responseData interface{}) 
 	// Encode the request data to JSON
 	requestBody, err := json.Marshal(requestData)
 	if err != nil {
+		utils.LogInstance.WithFields(logrus.Fields{
+                        "requestData": requestData,
+			"error": err,
+                }).Error("user inputs are not correct json format.")
 		return fmt.Errorf("error marshalling request data: %w", err)
 	}
 
 	// Create a new HTTP POST request
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(requestBody))
 	if err != nil {
+		utils.LogInstance.WithFields(logrus.Fields{
+                        "requestData": requestData,
+			"error": err,
+                }).Error("error sending http request.")
 		return fmt.Errorf("error creating request: %w", err)
 	}
 
@@ -76,12 +84,20 @@ func sendRequest(url string, requestData interface{}, responseData interface{}) 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
+		utils.LogInstance.WithFields(logrus.Fields{
+                        "requestData": requestData,
+                        "error": err,
+                }).Error("error sending reuqest.")
 		return fmt.Errorf("error sending request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	// Check the response status code
 	if resp.StatusCode != http.StatusOK {
+		utils.LogInstance.WithFields(logrus.Fields{
+                        "requestData": requestData,
+			"http response status":  resp.Status,
+                }).Info("error when receiving responseinputs.")
 		return fmt.Errorf("error: %s", resp.Status)
 	}
 
@@ -89,6 +105,10 @@ func sendRequest(url string, requestData interface{}, responseData interface{}) 
 	if responseData != nil {
 		err = json.NewDecoder(resp.Body).Decode(responseData)
 		if err != nil {
+			utils.LogInstance.WithFields(logrus.Fields{
+                        	"requestData": requestData,
+                        	"error": err,
+                	}).Info("error  decoding response.")
 			return fmt.Errorf("error decoding response: %w", err)
 		}
 	}
@@ -129,73 +149,94 @@ func main() {
         const JOB_FAILED int = 4
 	base_url := config.JobBaseUrl
 	my_executor_name := "my_executor"
+	fmt.Println("job-run is running. If there is no error message, it means the service is ready. Press Ctl-C to Exit")
         utils.LogInstance.WithFields(logrus.Fields{
 		"Host": utils.GetHostname(),
-	}).Info("job-run is starting. If there is no error message, it means the service is ready.")
+	}).Info("job-run is starting. If there is no error message, it means the service is ready. Press Ctl-C to Exit")
 
         // Encode the executor struct to JSON
-        executor := LockExecutor{LockExecutorID: my_executor_name}
-        lockUrl := base_url + "/job_lock/" // lock url
+	for {
+		executor := LockExecutor{LockExecutorID: my_executor_name}
+        	lockUrl := base_url + "/job_lock/" // lock url
 
-        jobLockResponse, err := sendJobLockRequest(executor, lockUrl)
-        if err != nil {
-                panic(err)
-        } else {
-		fmt.Printf("Job ID: %d\n", jobLockResponse.JobLockInfo.ID)
-		fmt.Printf("Job Codes: %s\n", jobLockResponse.JobLockInfo.Codes)
-		fmt.Printf("Job requirements.txt: %s\n", jobLockResponse.JobLockInfo.RequirementsTxt)
-		fmt.Printf("Message: %s\n", jobLockResponse.Msg)
+	        jobLockResponse, err := sendJobLockRequest(executor, lockUrl)
+	        if err != nil {
+               		// panic(err)
+			utils.LogInstance.WithFields(logrus.Fields{
+				"Host": utils.GetHostname(),
+				"Error": err,
+			}).Error("Failed to lock a job/fetch a job info")
+	        } else {
+	//	fmt.Printf("Job ID: %d\n", jobLockResponse.JobLockInfo.ID)
+	//	fmt.Printf("Job Codes: %s\n", jobLockResponse.JobLockInfo.Codes)
+	//	fmt.Printf("Job requirements.txt: %s\n", jobLockResponse.JobLockInfo.RequirementsTxt)
+	//	fmt.Printf("Message: %s\n", jobLockResponse.Msg)
+			utils.LogInstance.WithFields(logrus.Fields{
+				"Host": utils.GetHostname(),
+				"Job ID": jobLockResponse.JobLockInfo.ID,
+				"Job Codes": jobLockResponse.JobLockInfo.Codes,
+				"Job requirements.txt": jobLockResponse.JobLockInfo.RequirementsTxt,
+				"Executor": my_executor_name,
+				"Message": jobLockResponse.Msg,
+			}).Info("lock a job/fetch a job info")
+		}
+        
+		jobId := jobLockResponse.JobLockInfo.ID
+		if jobId != 0 {
+			exeExecutor := ExeExecutor{ExecExecutorID: my_executor_name, ExecJobID: jobId}
+	        	exeUrl := base_url + "/job_execution/"
+	                nextStep := false
+		        jobExecutionResponse, err := sendJobExecutionRequest(exeExecutor, exeUrl)
+     		   	if err != nil {
+       	 	        //panic(err)
+				utils.LogInstance.WithFields(logrus.Fields{
+       		                 	"Host": utils.GetHostname(),
+        	                	"Job ID":  jobLockResponse.JobLockInfo.ID,
+					"Executor": my_executor_name,
+                		}).Error("Failed to execute a job")
+	        	} else {
+			//fmt.Println("Job Execution Response:", jobExecutionResponse)
+				nextStep = true
+				utils.LogInstance.WithFields(logrus.Fields{
+	                        	"Host": utils.GetHostname(),
+       		                 	"Job ID":  jobLockResponse.JobLockInfo.ID,
+       	        	         	"Status" :  jobExecutionResponse.Status,
+                        		"Job Status" :  jobExecutionResponse.JobStatus,
+					"Executor": my_executor_name,
+                		}).Info("Running a job")
+			}
+
+			if nextStep {
+				jobExecResult:=app.SaveAndExec(jobLockResponse.JobLockInfo.Codes,jobLockResponse.JobLockInfo.RequirementsTxt)
+				finishUrl := base_url + "/job_completion/"
+				var finishExcutor FinishExecutor
+		        	if strings.Contains(jobExecResult, "ERR") {
+					finishExcutor = FinishExecutor {JobID: jobId, ExecutorID: my_executor_name, JobStatus: JOB_FAILED}
+				} else {
+					finishExcutor = FinishExecutor {JobID: jobId, ExecutorID: my_executor_name, GeneratedAPIEndpoint: jobExecResult, JobStatus: JOB_SUCCESS}
+				}
+				jobFinishResponse, err:=sendJobFinishRequest(finishExcutor, finishUrl)
+				if err != nil {
+	              //  	panic(err)
+					utils.LogInstance.WithFields(logrus.Fields{
+                	        	        "Host": utils.GetHostname(),
+                       	 	        	"Job ID":  jobLockResponse.JobLockInfo.ID,
+                               			"Executor": my_executor_name,
+						"Error": err,
+                        		}).Error("Failed to finish a job")
+				} else {
+				//fmt.Println("Job Finish Response:", jobFinishResponse)
+				 	utils.LogInstance.WithFields(logrus.Fields{
+        	                        	"Host": utils.GetHostname(),
+                	              		"Job ID":  jobLockResponse.JobLockInfo.ID,
+                        	       		"Status" :  jobFinishResponse.Status,
+                                		"Job Status" :  jobFinishResponse.JobStatus,
+	                                	"Executor": my_executor_name,
+        	               	 	}).Info("Finished a job")
+				}
+			}
+
+		}
+		time.Sleep(10 * time.Second)
 	}
-
-
-	jobId := jobLockResponse.JobLockInfo.ID
-	exeExecutor := ExeExecutor{ExecExecutorID: my_executor_name, ExecJobID: jobId}
-        exeUrl := base_url + "/job_execution/"
-
-        jobExecutionResponse, err := sendJobExecutionRequest(exeExecutor, exeUrl)
-        if err != nil {
-                panic(err)
-        } else {
-		fmt.Println("Job Execution Response:", jobExecutionResponse)
-	}
-
-	jobExecResult:=app.SaveAndExec(jobLockResponse.JobLockInfo.Codes,jobLockResponse.JobLockInfo.RequirementsTxt)
-	finishUrl := base_url + "/job_completion/"
-	var finishExcutor FinishExecutor
-        if strings.Contains(jobExecResult, "ERR") {
-		finishExcutor = FinishExecutor {JobID: jobId, ExecutorID: my_executor_name, JobStatus: JOB_FAILED}
-	} else {
-		finishExcutor = FinishExecutor {JobID: jobId, ExecutorID: my_executor_name, GeneratedAPIEndpoint: jobExecResult, JobStatus: JOB_SUCCESS}
-	}
-	jobFinishResponse, err:=sendJobFinishRequest(finishExcutor, finishUrl)
-        if err != nil {
-                panic(err)
-        } else {
-		fmt.Println("Job Finish Response:", jobFinishResponse)
-	}
-
-
-/*	utils.LogInstance.WithFields(logrus.Fields{
-                        "codes": codeAndRelatedObject.Codes,
-                        "requirementstxt": codeAndRelatedObject.RequirementTxt,
-                }).Info("user's inputs.")
-
-                // start to process
-         //       status:=app.SaveAndExec(codeAndRelatedObject.Codes, codeAndRelatedObject.RequirementTxt)
-                //status:= "https://ihznxmqgj9.execute-api.ap-northeast-1.amazonaws.com/prod/"
-                if strings.Contains(status, "ERR") {
-                        retObj := ReturnObj{
-                                Endpoint: "",
-                                Message: status,
-                        }
-                        c.JSON(http.StatusBadRequest, retObj)
-                } else {
-                        retObj := ReturnObj{
-                                Endpoint: status,
-                                Message: "",
-                        }
-                        c.JSON(http.StatusOK, retObj)
-                }
-	/*///r.Run("0.0.0.0:" + strconv.Itoa(config.Port)) // listen and serve on 0.0.0.0:8080
-
 }
