@@ -16,7 +16,8 @@ job-run: it query job-submit-api and get job info to execute.
   - AWSLambda_FullAccess
   - IAMFullAccess
   - customize IAM access
-- the create a API key and aws cli to set up development environment with API key/credentail generated on AWS IAM page.
+- then create a API key 
+- use aws cli to set up the environment with API key/credentail generated on AWS IAM page.
 
 # go-api
 - Prerequisite: Go version >= 1.17 & Python >= 3.9
@@ -59,5 +60,32 @@ $ curl -X POST -H "Content-Type: application/json" -d '{"codes": "import request
 - Then, you can access the endpoint `https://8xrbdo625f.execute-api.ap-northeast-1.amazonaws.com/prod/` with the browser.
 
 
+# job-submit-api
+- Please note: this API does NOT process any jobs that can create AWS components
+- Prerequisite: Python >= 3.9 & docker & docker-compose
+- go to `job-submit-api`
+```
+$ cd job-submit-api
+```
+- Prepare a PostgreSQL container with docker-compose
+```
+$ docker-compose up -d
+```
+- create database and table with the [SQL script]("job-submit-api/sql/create_tables.sql")
+- prepare virtual env
+```
+$ python3 -m venv venv
+$ source venv/bin/activitate
+```
 
+- install necesssary python package
+```
+$ pip install -r requirements.txt
+```
 
+- start the server the the script [start.sh]("job-submit-api/start.sh")
+```
+$ sh start.sh
+```
+
+- about how to use the API, please refer to the [doc]("job-submit-api/docs/v1/README.md")
